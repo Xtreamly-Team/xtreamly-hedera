@@ -1,8 +1,14 @@
 import { config } from "dotenv";
-import { HederaOperator } from "./hedera";
+import { HederaOperator } from "./hedera.js";
+import { Xtreamly } from "./xtreamly.js";
+import { exit } from "process";
 config()
 
 async function test() {
+    const xtreamly = new Xtreamly()
+    const res = await xtreamly.getSignals('ETH')
+    console.log(res)
+    exit()
     const hederaOpeator = new HederaOperator(
         process.env.HEDERA_TEST_ACCOUNT_ID,
         process.env.HEDERA_TEST_PRIVATE_KEY
