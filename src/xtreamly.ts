@@ -17,8 +17,8 @@ export class Xtreamly {
         }
     }
 
-    async getSignals(token: string) {
-        const url = `${this.baseUrl}/api/v1/signals/?skip=0&limit=1&symbol=${token}`;
+    async getSignals(token: string, interval_min: number = 60) {
+        const url = `${this.baseUrl}/api/v1/signals/?skip=0&limit=${interval_min}&symbol=${token}`;
         console.log(`Fetching signals from URL: ${url}`);
         const res = await fetch(url, {
             method: 'GET',
@@ -43,6 +43,23 @@ export class Xtreamly {
             }
         })
         return signals
+    }
+
+    async getIntervalLastSignal(token: string, interval_min: number = 60) {
+        let lastSignal: Signal | null = null;
+        const lastInrevalSignals = await this.getSignals(token, interval_min);
+
+        console.log(`Fetched ${lastInrevalSignals.length} signals for token ${token} in the last ${interval_min} minutes.`);
+        const reversed = [...lastInrevalSignals].reverse();
+        for (const signal of reversed) {
+            if (signal.long || signal.short) {
+                lastSignal = signal;
+            }
+        }
+        if (!lastSignal) {
+            lastSignal = lastInrevalSignals[0]
+        }
+        return lastSignal;
     }
 }
 
