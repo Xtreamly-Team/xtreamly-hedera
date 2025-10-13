@@ -18,15 +18,28 @@ export async function sendSignalToHedera(token: string) {
         const signalToSend = {
             'symbol': signal.symbol,
             'action': actualSignal,
-            'timestamp': signal.prediction_time,
+            'timestamp': (new Date(signal.prediction_time)).getTime(),
         }
 
         console.log(`Sending signal to Hedera: ${JSON.stringify(signalToSend)}`)
 
+        const tokensMap = {
+            'BTC': 0,
+            'ETH': 1,
+            'SOL': 2
+        }
+
+        const actionsMap = {
+            'none': 0,
+            'long': 1,
+            'short': 2,
+        }
+
         const res = await hederaOpeator.updateNFTMetadata(
             tokenId,
             nftSerialNumber,
-            signalToSend,
+            ['uint8', 'uint8', 'uint64'],
+            [tokensMap[signalToSend.symbol], actionsMap[signalToSend.action], signalToSend.timestamp]
         )
         console.log(res)
 
