@@ -1,14 +1,16 @@
 import { HederaOperator } from "./hedera.js"
 import { Xtreamly } from "./xtreamly.js"
 
-export async function sendSignalToHedera(token: string) {
+export async function sendSignalToHedera(
+    token: string
+) {
     const xtreamly = new Xtreamly()
     const signal = await xtreamly.getIntervalLastSignal(token)
     const actualSignal = signal.long ? 'long' : signal.short ? 'short' : 'none'
 
     const hederaOpeator = new HederaOperator(
-        process.env.HEDERA_TEST_ACCOUNT_ID,
-        process.env.HEDERA_TEST_PRIVATE_KEY
+        process.env.HEDERA_ACCOUNT_ID,
+        process.env.HEDERA_PRIVATE_KEY
     )
     try {
 
@@ -21,7 +23,7 @@ export async function sendSignalToHedera(token: string) {
             'timestamp': (new Date(signal.prediction_time)).getTime(),
         }
 
-        console.log(`Sending signal to Hedera: ${JSON.stringify(signalToSend)}`)
+        console.log(`Sending trading signal to Hedera: ${JSON.stringify(signalToSend)}`)
 
         const tokensMap = {
             'BTC': 0,
@@ -41,7 +43,7 @@ export async function sendSignalToHedera(token: string) {
             ['uint8', 'uint8', 'uint64'],
             [tokensMap[signalToSend.symbol], actionsMap[signalToSend.action], signalToSend.timestamp]
         )
-        console.log(res)
+        return res
 
     } catch (error) {
         console.error(error);

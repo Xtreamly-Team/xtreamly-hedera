@@ -1,30 +1,38 @@
 import { config } from "dotenv";
 import { HederaOperator } from "./hedera.js";
-import { Xtreamly } from "./xtreamly.js";
-import { exit } from "process";
-import { sendSignalToHedera } from "./oracle.js";
-
-import fs from "fs";
 config()
 
 async function test() {
-    // const xtreamly = new Xtreamly()
-    // const res = await xtreamly.getIntervalLastSignal('ETH')
-    // console.log(res)
-    // exit()
     const hederaOpeator = new HederaOperator(
-        process.env.HEDERA_TEST_ACCOUNT_ID,
-        process.env.HEDERA_TEST_PRIVATE_KEY
+        process.env.HEDERA_ACCOUNT_ID,
+        process.env.HEDERA_PRIVATE_KEY
     )
 
     try {
 
+        await hederaOpeator.swap(
+            process.env.USDC_TOKEN_ID,
+            process.env.WETH_TOKEN_ID,
+            (1 * 1_000_000),
+            1500,
+        )
+
+        // await hederaOpeator.createNFTCollection('Xtreamly Trading Signal', 'XTS')
+
+        // await hederaOpeator.createNFT(
+        //     process.env.NFT_COLLECTION_TOKEN_ID,
+        //     ['uint8', 'uint8', 'uint64'],
+        //     [1, 1, 1760540481]
+        // )
+
+        // await hederaOpeator.createSmartContract()
+
         // const res = await sendSignalToHedera('ETH')
+        // console.log(res)
 
         // const contractId = await hederaOpeator.createSmartContract(
         //     process.env.READ_NFT_SMARTCONTRACT_BYTECODE
         // )
-        //
 
         // const res = await hederaOpeator.createSmartContract(
         //     process.env.READ_NFT_SMARTCONTRACT_BYTECODE
@@ -40,16 +48,6 @@ async function test() {
         //
         //
 
-        const abi = JSON.parse(fs.readFileSync("./src/abi.json", "utf8"));
-        // console.log(abi)
-
-
-        const res = await hederaOpeator.getContractLogs(
-            '0.0.6976324@1760382627.132397476',
-            abi
-        )
-        console.log(res.length)
-
         // const tokenId = process.env.NFT_COLLECTION_TOKEN_ID
         // const nftSerialNumber = parseInt(process.env.NFT_SERIAL_NUMBER)
         //
@@ -62,6 +60,13 @@ async function test() {
         //     }
         // )
         // console.log(res)
+        //
+        // const abi = JSON.parse(fs.readFileSync("./src/abi.json", "utf8"));
+        // const res = await hederaOpeator.getContractLogs(
+        //     '0.0.6976324@1760382627.132397476',
+        //     abi
+        // )
+        // console.log(res.length)
 
     } catch (error) {
         console.error(error);
