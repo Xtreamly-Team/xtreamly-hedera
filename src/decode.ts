@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import routerAbi from "./abi/saucer_router_abi.json" assert { type: "json" };;
+import smartContractAbi from "./abi/xtreamly_testnet_abi.json" assert { type: "json" };;
 
 const iface = new ethers.utils.Interface(routerAbi);
 
@@ -39,4 +40,18 @@ try {
     }
 } catch (err) {
     console.error("Failed to decode:", err.message);
+}
+
+async function decodeTransactionLogs(transactionId: string) {
+    const contractInterface = new ethers.utils.Interface(smartContractAbi)
+
+    const mirrorNode = "https://testnet.mirrornode.hedera.com/api/v1";
+
+    let url = `${mirrorNode}/contracts/results/${transactionId}`;
+    const res = await (await fetch(url)).json()
+    const logs = res.logs
+    for (const log of logs) {
+        const parsed = contractInterface.parseLog(log)
+        console.log(parsed)
+    }
 }

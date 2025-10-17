@@ -18,7 +18,8 @@ import {
     Hbar,
     AccountInfoQuery,
     AccountCreateTransaction,
-    AccountUpdateTransaction
+    AccountUpdateTransaction,
+    TokenAssociateTransaction
 
 } from "@hashgraph/sdk"; // v2.64.5
 
@@ -64,12 +65,163 @@ export class HederaOperator {
         return info
     }
 
+    async createToken(tokenName: string, tokenSymbol: string, initialSupply: number = 1_000, decimals: number = 6) {
+        const txTokenCreate = await new TokenCreateTransaction()
+            .setTokenName(tokenName)
+            .setTokenSymbol(tokenSymbol)
+            .setTokenType(TokenType.FungibleCommon)
+            .setTreasuryAccountId(this.account_id)
+            .setInitialSupply(initialSupply)
+            .setSupplyKey(this.private_key)
+            .setDecimals(decimals)
+            .freezeWith(this.client);
 
-    async createSmartContract(bytecode: string) {
+        //Sign the transaction with the token treasury account private key
+        const signTxTokenCreate = await txTokenCreate.sign(this.private_key);
+
+        //Sign the transaction with the client operator private key and submit to a Hedera network
+        const txTokenCreateResponse = await signTxTokenCreate.execute(this.client);
+
+        //Get the receipt of the transaction
+        const receiptTokenCreateTx = await txTokenCreateResponse.getReceipt(this.client);
+
+        //Get the token ID from the receipt
+        const tokenId = receiptTokenCreateTx.tokenId;
+
+        //Get the transaction consensus status
+        const statusTokenCreateTx = receiptTokenCreateTx.status;
+
+        //Get the Transaction ID
+        const txTokenCreateId = txTokenCreateResponse.transactionId.toString();
+
+        console.log("--------------------------------- Token Creation ---------------------------------");
+        console.log("Receipt status           :", statusTokenCreateTx.toString());
+        console.log("Transaction ID           :", txTokenCreateId);
+        console.log("Hashscan URL             :", "https://hashscan.io/testnet/transaction/" + txTokenCreateId);
+        console.log("Token ID                 :", tokenId.toString());
+    }
+
+    async mintToken(tokenId: string, amount: number) {
+        const txTokenMint = await new TokenMintTransaction()
+            .setTokenId(tokenId) //Fill in the token ID
+            .setAmount(amount)
+            .freezeWith(this.client);
+
+        //Sign with the supply private key of the token 
+        const signTxTokenMint = await txTokenMint.sign(this.private_key); //Fill in the supply private key
+
+        //Submit the transaction to a Hedera network    
+        const txTokenMintResponse = await signTxTokenMint.execute(this.client);
+
+        //Request the receipt of the transaction
+        const receiptTokenMintTx = await txTokenMintResponse.getReceipt(this.client);
+
+        //Get the transaction consensus status
+        const statusTokenMintTx = receiptTokenMintTx.status;
+
+        //Get the Transaction ID
+        const txTokenMintId = txTokenMintResponse.transactionId.toString();
+
+        console.log("--------------------------------- Mint Token ---------------------------------");
+        console.log("Receipt status           :", statusTokenMintTx.toString());
+        console.log("Transaction ID           :", txTokenMintId);
+        console.log("Hashscan URL             :", "https://hashscan.io/testnet/transaction/" + txTokenMintId);
+    }
+
+    async transferToken(tokenId: string, receiver: string, amount: number) {
+        const transferTx = new TransferTransaction()
+            .addTokenTransfer(tokenId, this.account_id, -amount)   // deduct from sender
+            .addTokenTransfer(tokenId, AccountId.fromString(receiver), amount)  // add to receiver
+            .freezeWith(this.client);
+
+        //Sign and execute
+        const signedTx = await transferTx.signWithOperator(this.client);
+        const submitTx = await signedTx.execute(this.client);
+
+        //Get receipt
+        const receipt = await submitTx.getReceipt(this.client);
+
+        console.log(`✅ Token transfer status: ${receipt.status.toString()}`);
+        console.log(`🔹 Tx ID: ${submitTx.transactionId.toString()}`);
+    }
+
+    // NOTE: You need to send the evm address (not derived from id) as receiver
+    async callWithdrawSmartContract(
+        contractId: string,
+        tokenId: string,
+        receiverEvm: string,
+        amount: number,
+    ) {
+        console.log("Calling smart contract:", contractId)
+
+        const txContractExecute = new ContractExecuteTransaction()
+            .setContractId(ContractId.fromString(contractId))
+            .setGas(1_000_000)
+            .setFunction("withdrawToken",
+                new ContractFunctionParameters()
+                    .addAddress(AccountId.fromString(tokenId).toEvmAddress())
+                    .addAddress(receiverEvm)
+                    .addInt64(amount));
+
+        const txContractExecuteResponse = await txContractExecute.execute(this.client);
+        const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
+        const statusContractExecuteTx = receiptContractExecuteTx.status;
+        const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
+
+
+        console.log("--------------------------------- Execute Contract Flow ---------------------------------");
+        console.log("Consensus status           :", statusContractExecuteTx.toString());
+        console.log("Transaction ID             :", txContractExecuteId);
+        console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
+
+        return txContractExecuteResponse
+    }
+
+    async getTokenInfo(tokenId: string) {
+        const query = new TokenInfoQuery({
+            tokenId: tokenId
+        })
+
+        const info = await query.execute(this.client)
+        console.log(info)
+        return info
+    }
+
+    async associateToken(tokenId: string) {
+        const txTokenAssociate = await new TokenAssociateTransaction()
+            .setAccountId(this.account_id)
+            .setTokenIds([tokenId]) //Fill in the token ID
+            .freezeWith(this.client);
+
+        //Sign with the private key of the account that is being associated to a token 
+        //Submit the transaction to a Hedera network    
+        const signTxTokenAssociate = await txTokenAssociate.sign(this.private_key);
+
+        const txTokenAssociateResponse = await signTxTokenAssociate.execute(this.client);
+
+        //Request the receipt of the transaction
+        const receiptTokenAssociateTx = await txTokenAssociateResponse.getReceipt(this.client);
+
+        //Get the transaction consensus status
+        const statusTokenAssociateTx = receiptTokenAssociateTx.status;
+
+        //Get the Transaction ID
+        const txTokenAssociateId = txTokenAssociateResponse.transactionId.toString();
+
+        console.log("--------------------------------- Token Associate ---------------------------------");
+        console.log("Receipt status           :", statusTokenAssociateTx.toString());
+        console.log("Transaction ID           :", txTokenAssociateId);
+        console.log("Hashscan URL             :", "https://hashscan.io/testnet/transaction/" + txTokenAssociateId);
+    }
+
+    async createSmartContract(bytecode: string, router_id: string) {
         //Create the transaction
         const contractCreateFlow = new ContractCreateFlow()
             .setGas(10_000_000)
-            .setBytecode(bytecode); //Fill in the bytecode
+            .setBytecode(bytecode)
+            .setConstructorParameters(
+                new ContractFunctionParameters().addAddress(AccountId.fromString(router_id).toEvmAddress())
+            )
 
         //Sign the transaction with the client operator key and submit to a Hedera network
         const txContractCreateFlowResponse = await contractCreateFlow.execute(this.client);
@@ -128,7 +280,6 @@ export class HederaOperator {
             .setGas(1_000_000)
             .setFunction("associateTokenPublic",
                 new ContractFunctionParameters()
-                    .addAddress(AccountId.fromString(contractId).toEvmAddress())
                     .addAddress(AccountId.fromString(tokenId).toEvmAddress()));
 
         const txContractExecuteResponse = await txContractExecute.execute(this.client);
@@ -145,10 +296,9 @@ export class HederaOperator {
         return txContractExecuteResponse
     }
 
-    async callApproveSmartContract(
+    async callApproveToRouterSmartContract(
         contractId: string,
         tokenId: string,
-        spenderId: string,
         amount: number,
     ) {
         console.log("Calling smart contract:", contractId)
@@ -156,10 +306,9 @@ export class HederaOperator {
         const txContractExecute = new ContractExecuteTransaction()
             .setContractId(ContractId.fromString(contractId))
             .setGas(1_000_000)
-            .setFunction("approveToken",
+            .setFunction("approveTokenToRouter",
                 new ContractFunctionParameters()
                     .addAddress(AccountId.fromString(tokenId).toEvmAddress())
-                    .addAddress(AccountId.fromString(spenderId).toEvmAddress())
                     .addUint256(amount));
 
         const txContractExecuteResponse = await txContractExecute.execute(this.client);
