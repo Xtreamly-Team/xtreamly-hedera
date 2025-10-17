@@ -35,7 +35,7 @@ export class HederaOperator {
     private evm_address: string
     private client: Client
 
-    constructor(account_id: string, private_key: string) {
+    constructor(account_id: string, private_key: string, testnet: boolean = false) {
 
         this.account_id = AccountId.fromString(account_id);
         this.private_key = PrivateKey.fromStringECDSA(private_key);
@@ -43,8 +43,10 @@ export class HederaOperator {
         this.evm_address = wallet.address
 
         // Pre-configured client for test network (testnet)
-        // this.client = Client.forTestnet();
-        this.client = Client.forMainnet();
+        if (testnet)
+            this.client = Client.forTestnet();
+        else
+            this.client = Client.forMainnet();
 
 
         //Set the operator with the account ID and private key
@@ -95,27 +97,75 @@ export class HederaOperator {
 
     async callReadNFTSmartContract(contractId: string, nftAddress: string, serialNumber: number) {
         console.log("Calling smart contract:", contractId, "with nftAddress:", nftAddress, "and serialNumber:", serialNumber)
-        //Create the transaction
+
         const txContractExecute = new ContractExecuteTransaction()
             .setContractId(ContractId.fromEvmAddress(0, 0, contractId)) //Fill in the contract ID
             .setGas(1_000_000)
             .setFunction("readNFTMetadata", new ContractFunctionParameters().addAddress(EvmAddress.fromString(nftAddress)).addInt64(serialNumber));
 
-        //Sign with the client operator private key to pay for the transaction and submit the query to a Hedera network
         const txContractExecuteResponse = await txContractExecute.execute(this.client);
-
-        //Request the receipt of the transaction
         const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
-
-        //Get the transaction consensus status
         const statusContractExecuteTx = receiptContractExecuteTx.status;
-
-        //Get the Transaction ID
         const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
 
-        // const txRecord = await txContractExecuteResponse.getRecord(this.client)
-        // console.log("LOGS")
-        // console.log(txRecord.contractFunctionResult.logs)
+
+        console.log("--------------------------------- Execute Contract Flow ---------------------------------");
+        console.log("Consensus status           :", statusContractExecuteTx.toString());
+        console.log("Transaction ID             :", txContractExecuteId);
+        console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
+
+        return txContractExecuteResponse
+    }
+
+    async callAssociateSmartContract(
+        contractId: string,
+        tokenId: string,
+    ) {
+        console.log("Calling smart contract:", contractId)
+
+        const txContractExecute = new ContractExecuteTransaction()
+            .setContractId(ContractId.fromString(contractId))
+            .setGas(1_000_000)
+            .setFunction("associateTokenPublic",
+                new ContractFunctionParameters()
+                    .addAddress(AccountId.fromString(contractId).toEvmAddress())
+                    .addAddress(AccountId.fromString(tokenId).toEvmAddress()));
+
+        const txContractExecuteResponse = await txContractExecute.execute(this.client);
+        const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
+        const statusContractExecuteTx = receiptContractExecuteTx.status;
+        const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
+
+
+        console.log("--------------------------------- Execute Contract Flow ---------------------------------");
+        console.log("Consensus status           :", statusContractExecuteTx.toString());
+        console.log("Transaction ID             :", txContractExecuteId);
+        console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
+
+        return txContractExecuteResponse
+    }
+
+    async callApproveSmartContract(
+        contractId: string,
+        tokenId: string,
+        spenderId: string,
+        amount: number,
+    ) {
+        console.log("Calling smart contract:", contractId)
+
+        const txContractExecute = new ContractExecuteTransaction()
+            .setContractId(ContractId.fromString(contractId))
+            .setGas(1_000_000)
+            .setFunction("approveToken",
+                new ContractFunctionParameters()
+                    .addAddress(AccountId.fromString(tokenId).toEvmAddress())
+                    .addAddress(AccountId.fromString(spenderId).toEvmAddress())
+                    .addUint256(amount));
+
+        const txContractExecuteResponse = await txContractExecute.execute(this.client);
+        const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
+        const statusContractExecuteTx = receiptContractExecuteTx.status;
+        const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
 
 
         console.log("--------------------------------- Execute Contract Flow ---------------------------------");
@@ -291,9 +341,7 @@ export class HederaOperator {
 
     async swap(
         tokenIn: string,
-        // tokenInEVM: string,
         tokenOut: string,
-        // tokenOutEVM: string,
         amountIn: number,
         fee: number
     ) {

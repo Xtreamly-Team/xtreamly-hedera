@@ -4,18 +4,21 @@ config()
 
 async function test() {
     const hederaOpeator = new HederaOperator(
-        process.env.HEDERA_ACCOUNT_ID,
-        process.env.HEDERA_PRIVATE_KEY
+        // process.env.HEDERA_ACCOUNT_ID,
+        // process.env.HEDERA_PRIVATE_KEY
+        process.env.HEDERA_TEST_ACCOUNT_ID,
+        process.env.HEDERA_TEST_PRIVATE_KEY,
+        true,
     )
 
     try {
 
-        await hederaOpeator.swap(
-            process.env.USDC_TOKEN_ID,
-            process.env.WETH_TOKEN_ID,
-            (1 * 1_000_000),
-            1500,
-        )
+        // await hederaOpeator.swap(
+        //     process.env.USDC_TOKEN_ID,
+        //     process.env.WETH_TOKEN_ID,
+        //     (1 * 1_000_000),
+        //     1500,
+        // )
 
         // await hederaOpeator.createNFTCollection('Xtreamly Trading Signal', 'XTS')
 
@@ -25,14 +28,27 @@ async function test() {
         //     [1, 1, 1760540481]
         // )
 
-        // await hederaOpeator.createSmartContract()
-
         // const res = await sendSignalToHedera('ETH')
         // console.log(res)
 
         // const contractId = await hederaOpeator.createSmartContract(
-        //     process.env.READ_NFT_SMARTCONTRACT_BYTECODE
+        //     process.env.TEST_SMARTCONTRACT_BYTECODE
         // )
+        // console.log(contractId)
+
+        // const res = await hederaOpeator.callAssociateSmartContract(
+        //     process.env.TEST_SMARTCONTRACT_ID,
+        //     process.env.SAMPLE_TESTNET_TOKEN_ID,
+        // )
+        // console.log(res)
+
+        const res = await hederaOpeator.callApproveSmartContract(
+            process.env.TEST_SMARTCONTRACT_ID,
+            process.env.SAMPLE_TESTNET_TOKEN_ID,
+            process.env.SAUCERSWAP_ROUTER_TESTNET_ID,
+            100_000_000,
+        )
+        console.log(res)
 
         // const res = await hederaOpeator.createSmartContract(
         //     process.env.READ_NFT_SMARTCONTRACT_BYTECODE
