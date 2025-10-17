@@ -5,6 +5,26 @@
 				"internalType": "address",
 				"name": "_router",
 				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_wethAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_usdcAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_signalNFTAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "int64",
+				"name": "_signalNFTSerialNumber",
+				"type": "int64"
 			}
 		],
 		"stateMutability": "nonpayable",
@@ -38,19 +58,6 @@
 			}
 		],
 		"name": "ActionData",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "int64",
-				"name": "responseCode",
-				"type": "int64"
-			}
-		],
-		"name": "ApprovalResponse",
 		"type": "event"
 	},
 	{
@@ -377,59 +384,6 @@
 				"internalType": "address",
 				"name": "token",
 				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approveToken",
-		"outputs": [
-			{
-				"internalType": "int256",
-				"name": "responseCode",
-				"type": "int256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approveTokenToRouter",
-		"outputs": [
-			{
-				"internalType": "int256",
-				"name": "responseCode",
-				"type": "int256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
 			}
 		],
 		"name": "associateTokenPublic",
@@ -440,6 +394,24 @@
 				"type": "int256"
 			}
 		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "usdcAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "wethAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "autoTrade",
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -515,6 +487,32 @@
 	},
 	{
 		"inputs": [],
+		"name": "signalNFTAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "signalNFTSerialNumber",
+		"outputs": [
+			{
+				"internalType": "int64",
+				"name": "",
+				"type": "int64"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "swapRouter",
 		"outputs": [
 			{
@@ -551,7 +549,7 @@
 		],
 		"name": "swapTokens",
 		"outputs": [],
-		"stateMutability": "payable",
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -620,6 +618,32 @@
 			}
 		],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "usdcAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "wethAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{

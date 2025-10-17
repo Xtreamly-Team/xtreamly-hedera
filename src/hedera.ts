@@ -210,6 +210,36 @@ export class HederaOperator {
         return txContractExecuteResponse
     }
 
+    async callAutoTradeInSmartContract(
+        contractId: string,
+        usdcAmount: number,
+        wethAmount: number,
+    ) {
+        console.log("Calling smart contract:", contractId)
+
+        const txContractExecute = new ContractExecuteTransaction()
+            .setContractId(ContractId.fromString(contractId))
+            .setGas(1_000_000)
+            .setFunction("autoTrade",
+                new ContractFunctionParameters()
+                    .addUint256(usdcAmount)
+                    .addUint256(wethAmount)
+            )
+
+        const txContractExecuteResponse = await txContractExecute.execute(this.client);
+        const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
+        const statusContractExecuteTx = receiptContractExecuteTx.status;
+        const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
+
+
+        console.log("--------------------------------- Execute Contract Flow ---------------------------------");
+        console.log("Consensus status           :", statusContractExecuteTx.toString());
+        console.log("Transaction ID             :", txContractExecuteId);
+        console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
+
+        return txContractExecuteResponse
+    }
+
     async getTokenInfo(tokenId: string) {
         const query = new TokenInfoQuery({
             tokenId: tokenId
@@ -247,13 +277,26 @@ export class HederaOperator {
         console.log("Hashscan URL             :", "https://hashscan.io/testnet/transaction/" + txTokenAssociateId);
     }
 
-    async createSmartContract(bytecode: string, router_id: string) {
+    async createSmartContract(
+        bytecode: string,
+        router_id: string,
+        weth_id: string,
+        usdc_id: string,
+        nft_id: string,
+        nft_serial_number: number
+
+    ) {
         //Create the transaction
         const contractCreateFlow = new ContractCreateFlow()
             .setGas(10_000_000)
             .setBytecode(bytecode)
             .setConstructorParameters(
-                new ContractFunctionParameters().addAddress(AccountId.fromString(router_id).toEvmAddress())
+                new ContractFunctionParameters()
+                    .addAddress(AccountId.fromString(router_id).toEvmAddress())
+                    .addAddress(AccountId.fromString(weth_id).toEvmAddress())
+                    .addAddress(AccountId.fromString(usdc_id).toEvmAddress())
+                    .addAddress(AccountId.fromString(nft_id).toEvmAddress())
+                    .addInt64(nft_serial_number)
             )
 
         //Sign the transaction with the client operator key and submit to a Hedera network
@@ -280,13 +323,20 @@ export class HederaOperator {
         return contractId
     }
 
-    async callReadNFTSmartContract(contractId: string, nftAddress: string, serialNumber: number) {
-        console.log("Calling smart contract:", contractId, "with nftAddress:", nftAddress, "and serialNumber:", serialNumber)
+    async callReadNFTSmartContract(
+        contractId: string,
+        nft_id: string,
+        serialNumber: number
+    ) {
+        console.log("Calling smart contract:", contractId, "with nft_id:", nft_id, "and serialNumber:", serialNumber)
 
         const txContractExecute = new ContractExecuteTransaction()
-            .setContractId(ContractId.fromEvmAddress(0, 0, contractId)) //Fill in the contract ID
+            .setContractId(ContractId.fromString(contractId))
             .setGas(1_000_000)
-            .setFunction("readNFTMetadata", new ContractFunctionParameters().addAddress(EvmAddress.fromString(nftAddress)).addInt64(serialNumber));
+            .setFunction("readNFTMetadata", new ContractFunctionParameters()
+                .addAddress(AccountId.fromString(nft_id).toEvmAddress())
+                .addInt64(serialNumber)
+            );
 
         const txContractExecuteResponse = await txContractExecute.execute(this.client);
         const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);

@@ -16,6 +16,10 @@ async function prepareSmartContract() {
         const contractId = await hederaOpeator.createSmartContract(
             process.env.SMARTCONTRACT_BYTECODE,
             process.env.ROUTER_ID,
+            process.env.WETH_TOKEN_ID,
+            process.env.USDC_TOKEN_ID,
+            process.env.SIGNAL_NFT_COLLECTION_TOKEN_ID,
+            parseInt(process.env.SIGNAL_NFT_SERIAL_NUMBER),
         )
         console.log(contractId)
     }
@@ -55,12 +59,47 @@ async function prepareSmartContract() {
         )
     }
 
-    try {
-        await swap(
-            process.env.USDC_TOKEN_ID,
-            process.env.WETH_TOKEN_ID,
-            10_000_000,
+    async function readSignal() {
+        await hederaOpeator.callReadNFTSmartContract(
+            process.env.SMARTCONTRACT_ID,
+            process.env.SIGNAL_NFT_COLLECTION_TOKEN_ID,
+            parseInt(process.env.SIGNAL_NFT_SERIAL_NUMBER)
         )
+    }
+
+    async function autoTrade() {
+        await hederaOpeator.callAutoTradeInSmartContract(
+            process.env.SMARTCONTRACT_ID,
+            5_000_000,
+            500_000
+        )
+    }
+
+    try {
+
+        // await createSmartContract()
+        // await firstTimeSetup()
+        // await userFirstTimeSetup()
+
+        // await readSignal()
+
+        await autoTrade()
+
+        // await hederaOpeator.updateNFTMetadata(
+        //     process.env.SIGNAL_NFT_COLLECTION_TOKEN_ID,
+        //     parseInt(process.env.SIGNAL_NFT_SERIAL_NUMBER),
+        //     ['uint8', 'uint8', 'uint64'],
+        //     [1, 2, 1760740161]
+        //
+        // )
+
+        // await swap(
+        //     process.env.USDC_TOKEN_ID,
+        //     process.env.WETH_TOKEN_ID,
+        //     1_000_000,
+        // )
+
+        // await readSignal()
 
 
     } catch (error) {

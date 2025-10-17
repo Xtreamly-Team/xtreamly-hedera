@@ -11,8 +11,6 @@ import "https://raw.githubusercontent.com/hashgraph/hedera-smart-contracts/refs/
 // import "hedera-token-service/KeyHelper.sol";
 import "https://raw.githubusercontent.com/hashgraph/hedera-smart-contracts/refs/heads/main/contracts/system-contracts/hedera-token-service/KeyHelper.sol";
 
-// import "./ISwapRouter.sol";
-
 struct NFTMetadata {
     uint8 symbolCode;   // first uint8
     uint8 actionCode;   // second uint8
@@ -48,9 +46,17 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
     event ActionData(NFTMetadata metadata);
 
     address public immutable swapRouter; // e.g. 0x00000000000000000000000000000000003c437A (SaucerSwap mainnet router)
+    address public immutable wethAddress;
+    address public immutable usdcAddress;
+    address public immutable signalNFTAddress;
+    int64 public immutable signalNFTSerialNumber;
 
-    constructor(address _router) {
+    constructor(address _router, address _wethAddress, address _usdcAddress, address _signalNFTAddress, int64 _signalNFTSerialNumber) {
         swapRouter = _router;
+        wethAddress = _wethAddress;
+        usdcAddress = _usdcAddress;
+        signalNFTAddress = _signalNFTAddress;
+        signalNFTSerialNumber = _signalNFTSerialNumber;
     }
 
     function readNFTMetadata(address token, int64 serialNumber)
@@ -80,28 +86,6 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
         return md;
     }
 
-    event ApprovalResponse(int64 responseCode);
-
-    function approveToken(address token, address spender, uint256 amount) public returns (int responseCode) {
-
-        responseCode = HederaTokenService.approve(token, spender, amount);
-        emit ResponseCode(responseCode);
-
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert ();
-        }
-    }
-
-    function approveTokenToRouter(address token, uint256 amount) public returns (int responseCode) {
-
-        responseCode = HederaTokenService.approve(token, swapRouter, amount);
-        emit ResponseCode(responseCode);
-
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert ();
-        }
-    }
-
     function associateTokenPublic(address token) public returns (int responseCode) {
         responseCode = HederaTokenService.associateToken(address(this), token);
         emit ResponseCode(responseCode);
@@ -111,7 +95,8 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
         }
     }
 
-    // Receiver should be given as EVM native (not derived from account id)
+    // Receiver should be given as EVM native (not derived from account id).
+    // This is only be realisticly used if a token was transfered to this contract by mistake
     function withdrawToken(address token, address receiver, int64 amount) public returns (int responseCode) {
         responseCode = HederaTokenService.transferToken(token, address(this), receiver, int64(amount));
         emit ResponseCode(responseCode);
@@ -123,14 +108,42 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
 
     /**
      * Perform token swap via multicall (exactInput + sweepToken)
-     * Make sure both tokens are associated with contract and also approve tokenIn to router with amountIn
+     * Make sure both tokens are associated with contract and also approve tokenIn to router with at least amountIn
+     * Contract would send the amount from caller to itself and after swapping it with router, it automatically sends the resulting tokens to caller,
+     * Meaning no token will remain in the contract itself
      */
     function swapTokens(
         address tokenIn,
         address tokenOut,
         uint24 fee,
         uint256 amountIn
-    ) external payable {
+    ) public {
+
+        // require(amountIn <= uint64(type(int64).max), "Amount exceeds int64 max");
+        // int64 amountInt64 = int64(uint64(amountIn));
+        // HederaTokenService.transferFrom(tokenIn, msg.sender, address(this), amountInt64);
+        int  responseCode = this.transferFrom(tokenIn, msg.sender, address(this), amountIn);
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert();
+        }
+
+        // Check current allowance for the router
+        (int256 approvalresponseCode, uint256 currentAllowance) = HederaTokenService.allowance(
+            tokenIn,
+            address(this),  // this contract
+            swapRouter      // spender
+        );
+        require(approvalresponseCode == HederaResponseCodes.SUCCESS, "Allowance check failed");
+        
+        // Approve router if needed
+        if (currentAllowance < amountIn) {
+            int256 approveResponse = HederaTokenService.approve(
+                tokenIn,
+                swapRouter,
+                amountIn
+            );
+            require(approveResponse == HederaResponseCodes.SUCCESS, "Approval failed");
+        }
 
         // Build the path: tokenIn + fee + tokenOut
         bytes memory path = abi.encodePacked(tokenIn, fee, tokenOut);
@@ -162,6 +175,18 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
             abi.encodeWithSelector(ISwapRouter.multicall.selector, multicallData)
         );
         require(success, "Router multicall failed");
+    }
+
+    function autoTrade(
+        uint256 usdcAmount, 
+        uint256 wethAmount
+    ) external {
+        NFTMetadata memory actionData = this.readNFTMetadata(signalNFTAddress, signalNFTSerialNumber);
+        if (actionData.actionCode == 1) {
+            this.swapTokens(usdcAddress, wethAddress, 1500, usdcAmount);
+        } else if (actionData.actionCode == 2) {
+            this.swapTokens(wethAddress, usdcAddress, 1500, wethAmount);
+        }
     }
 
 }
