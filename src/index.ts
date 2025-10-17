@@ -12,58 +12,55 @@ async function prepareSmartContract() {
         false,
     )
 
-    try {
+    async function createSmartContract() {
+        const contractId = await hederaOpeator.createSmartContract(
+            process.env.SMARTCONTRACT_BYTECODE,
+            process.env.ROUTER_ID,
+        )
+        console.log(contractId)
+    }
 
-        // const contractId = await hederaOpeator.createSmartContract(
-        //     process.env.SMARTCONTRACT_BYTECODE,
-        //     process.env.ROUTER_ID,
-        // )
-        // console.log(contractId)
-
-        // await hederaOpeator.callAssociateSmartContract(
-        //     process.env.SMARTCONTRACT_ID,
-        //     process.env.USDC_TOKEN_ID,
-        // )
-        //
-        // await hederaOpeator.callAssociateSmartContract(
-        //     process.env.SMARTCONTRACT_ID,
-        //     process.env.WETH_TOKEN_ID,
-        // )
-        //
-        // await hederaOpeator.callApproveToRouterSmartContract(
-        //     process.env.SMARTCONTRACT_ID,
-        //     process.env.USDC_TOKEN_ID,
-        //     1_000_000_000,
-        // )
-        //
-        // await hederaOpeator.callApproveToRouterSmartContract(
-        //     process.env.SMARTCONTRACT_ID,
-        //     process.env.WETH_TOKEN_ID,
-        //     1_000_000_000,
-        // )
-
-
-        // await hederaOpeator.transferToken(
-        //     process.env.USDC_TOKEN_ID,
-        //     process.env.SMARTCONTRACT_ID,
-        //     1_000_000
-        // )
-
-        // await hederaOpeator.callWithdrawSmartContract(
-        //     process.env.SMARTCONTRACT_ID,
-        //     process.env.USDC_TOKEN_ID,
-        //     process.env.HEDERA_EVM_ADDRESS,
-        //     50_000
-        // )
-
-        await hederaOpeator.callSwapInSmartContract(
+    async function firstTimeSetup() {
+        await hederaOpeator.callAssociateSmartContract(
             process.env.SMARTCONTRACT_ID,
             process.env.USDC_TOKEN_ID,
-            process.env.WETH_TOKEN_ID,
-            1500,
-            1_000_000,
         )
 
+        await hederaOpeator.callAssociateSmartContract(
+            process.env.SMARTCONTRACT_ID,
+            process.env.WETH_TOKEN_ID,
+        )
+    }
+
+    async function userFirstTimeSetup() {
+        await hederaOpeator.approve(
+            process.env.USDC_TOKEN_ID,
+            process.env.SMARTCONTRACT_ID,
+            1_000_000_000,
+        )
+    }
+
+    async function swap(
+        tokenIn: string,
+        tokenOut: string,
+        amount: number,
+        fee: number = 1500,
+    ) {
+        await hederaOpeator.callSwapInSmartContract(
+            process.env.SMARTCONTRACT_ID,
+            tokenIn,
+            tokenOut,
+            fee,
+            amount,
+        )
+    }
+
+    try {
+        await swap(
+            process.env.USDC_TOKEN_ID,
+            process.env.WETH_TOKEN_ID,
+            10_000_000,
+        )
 
 
     } catch (error) {
@@ -74,6 +71,7 @@ async function prepareSmartContract() {
 
 
 }
+
 
 prepareSmartContract()
 

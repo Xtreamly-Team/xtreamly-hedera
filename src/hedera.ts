@@ -329,34 +329,34 @@ export class HederaOperator {
         return txContractExecuteResponse
     }
 
-    async callApproveToRouterSmartContract(
-        contractId: string,
-        tokenId: string,
-        amount: number,
-    ) {
-        console.log("Calling smart contract:", contractId)
-
-        const txContractExecute = new ContractExecuteTransaction()
-            .setContractId(ContractId.fromString(contractId))
-            .setGas(1_000_000)
-            .setFunction("approveTokenToRouter",
-                new ContractFunctionParameters()
-                    .addAddress(AccountId.fromString(tokenId).toEvmAddress())
-                    .addUint256(amount));
-
-        const txContractExecuteResponse = await txContractExecute.execute(this.client);
-        const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
-        const statusContractExecuteTx = receiptContractExecuteTx.status;
-        const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
-
-
-        console.log("--------------------------------- Execute Contract Flow ---------------------------------");
-        console.log("Consensus status           :", statusContractExecuteTx.toString());
-        console.log("Transaction ID             :", txContractExecuteId);
-        console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
-
-        return txContractExecuteResponse
-    }
+    // async callApproveSmartContract(
+    //     contractId: string,
+    //     tokenId: string,
+    //     amount: number,
+    // ) {
+    //     console.log("Calling smart contract:", contractId)
+    //
+    //     const txContractExecute = new ContractExecuteTransaction()
+    //         .setContractId(ContractId.fromString(contractId))
+    //         .setGas(1_000_000)
+    //         .setFunction("approveTokenToRouter",
+    //             new ContractFunctionParameters()
+    //                 .addAddress(AccountId.fromString(tokenId).toEvmAddress())
+    //                 .addUint256(amount));
+    //
+    //     const txContractExecuteResponse = await txContractExecute.execute(this.client);
+    //     const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
+    //     const statusContractExecuteTx = receiptContractExecuteTx.status;
+    //     const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
+    //
+    //
+    //     console.log("--------------------------------- Execute Contract Flow ---------------------------------");
+    //     console.log("Consensus status           :", statusContractExecuteTx.toString());
+    //     console.log("Transaction ID             :", txContractExecuteId);
+    //     console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
+    //
+    //     return txContractExecuteResponse
+    // }
 
     async getContractLogs(transactionId: string, abi: any) {
         const contractInterface = new ethers.utils.Interface(abi);
@@ -508,10 +508,10 @@ export class HederaOperator {
     }
 
     async approve(
-        tokenId: string, ownerId: string, spenderId: string, amount: number
+        tokenId: string, spenderId: string, amount: number
     ) {
         const tx = new AccountAllowanceApproveTransaction()
-            .approveTokenAllowance(tokenId, ownerId, spenderId, amount)
+            .approveTokenAllowance(tokenId, this.account_id, spenderId, amount)
             .freezeWith(this.client);
 
         const submitTx = await tx.execute(this.client);
@@ -547,7 +547,6 @@ export class HederaOperator {
         if (!is_approved) {
             await this.approve(
                 tokenIn,
-                this.account_id.toString(),
                 ROUTER_ID.toString(),
                 amountIn
             )
