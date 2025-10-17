@@ -177,6 +177,39 @@ export class HederaOperator {
         return txContractExecuteResponse
     }
 
+    async callSwapInSmartContract(
+        contractId: string,
+        tokenIn: string,
+        tokenOut: string,
+        fee: number,
+        amountIn: number
+    ) {
+        console.log("Calling smart contract:", contractId)
+
+        const txContractExecute = new ContractExecuteTransaction()
+            .setContractId(ContractId.fromString(contractId))
+            .setGas(1_000_000)
+            .setFunction("swapTokens",
+                new ContractFunctionParameters()
+                    .addAddress(AccountId.fromString(tokenIn).toEvmAddress())
+                    .addAddress(AccountId.fromString(tokenOut).toEvmAddress())
+                    .addUint24(fee)
+                    .addUint256(amountIn))
+
+        const txContractExecuteResponse = await txContractExecute.execute(this.client);
+        const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);
+        const statusContractExecuteTx = receiptContractExecuteTx.status;
+        const txContractExecuteId = txContractExecuteResponse.transactionId.toString();
+
+
+        console.log("--------------------------------- Execute Contract Flow ---------------------------------");
+        console.log("Consensus status           :", statusContractExecuteTx.toString());
+        console.log("Transaction ID             :", txContractExecuteId);
+        console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
+
+        return txContractExecuteResponse
+    }
+
     async getTokenInfo(tokenId: string) {
         const query = new TokenInfoQuery({
             tokenId: tokenId

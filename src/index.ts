@@ -29,7 +29,7 @@ async function prepareSmartContract() {
         //     process.env.SMARTCONTRACT_ID,
         //     process.env.WETH_TOKEN_ID,
         // )
-
+        //
         // await hederaOpeator.callApproveToRouterSmartContract(
         //     process.env.SMARTCONTRACT_ID,
         //     process.env.USDC_TOKEN_ID,
@@ -46,15 +46,25 @@ async function prepareSmartContract() {
         // await hederaOpeator.transferToken(
         //     process.env.USDC_TOKEN_ID,
         //     process.env.SMARTCONTRACT_ID,
-        //     100_000
+        //     1_000_000
         // )
 
-        await hederaOpeator.callWithdrawSmartContract(
+        // await hederaOpeator.callWithdrawSmartContract(
+        //     process.env.SMARTCONTRACT_ID,
+        //     process.env.USDC_TOKEN_ID,
+        //     process.env.HEDERA_EVM_ADDRESS,
+        //     50_000
+        // )
+
+        await hederaOpeator.callSwapInSmartContract(
             process.env.SMARTCONTRACT_ID,
             process.env.USDC_TOKEN_ID,
-            process.env.HEDERA_EVM_ADDRESS,
-            50_000
+            process.env.WETH_TOKEN_ID,
+            1500,
+            1_000_000,
         )
+
+
 
     } catch (error) {
         console.error(error);
