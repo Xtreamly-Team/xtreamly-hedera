@@ -189,7 +189,7 @@ export class HederaOperator {
         const txContractExecute = new ContractExecuteTransaction()
             .setContractId(ContractId.fromString(contractId))
             .setGas(1_000_000)
-            .setFunction("swapTokens",
+            .setFunction("swapTokensPublic",
                 new ContractFunctionParameters()
                     .addAddress(AccountId.fromString(tokenIn).toEvmAddress())
                     .addAddress(AccountId.fromString(tokenOut).toEvmAddress())
@@ -323,20 +323,15 @@ export class HederaOperator {
         return contractId
     }
 
-    async callReadNFTSmartContract(
+    async callReadNFTSignal(
         contractId: string,
-        nft_id: string,
-        serialNumber: number
     ) {
-        console.log("Calling smart contract:", contractId, "with nft_id:", nft_id, "and serialNumber:", serialNumber)
+        console.log("Calling smart contract:", contractId)
 
         const txContractExecute = new ContractExecuteTransaction()
             .setContractId(ContractId.fromString(contractId))
             .setGas(1_000_000)
-            .setFunction("readNFTMetadata", new ContractFunctionParameters()
-                .addAddress(AccountId.fromString(nft_id).toEvmAddress())
-                .addInt64(serialNumber)
-            );
+            .setFunction("readTradeSignalPublic");
 
         const txContractExecuteResponse = await txContractExecute.execute(this.client);
         const receiptContractExecuteTx = await txContractExecuteResponse.getReceipt(this.client);

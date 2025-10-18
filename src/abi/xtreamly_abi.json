@@ -34,36 +34,6 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"components": [
-					{
-						"internalType": "uint8",
-						"name": "symbolCode",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint8",
-						"name": "actionCode",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint64",
-						"name": "timestamp",
-						"type": "uint64"
-					}
-				],
-				"indexed": false,
-				"internalType": "struct NFTMetadata",
-				"name": "metadata",
-				"type": "tuple"
-			}
-		],
-		"name": "ActionData",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
 				"indexed": false,
 				"internalType": "bool",
 				"name": "",
@@ -379,6 +349,36 @@
 		"type": "event"
 	},
 	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint8",
+						"name": "symbolCode",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint8",
+						"name": "actionCode",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint64",
+						"name": "timestamp",
+						"type": "uint64"
+					}
+				],
+				"indexed": false,
+				"internalType": "struct TradeSignal",
+				"name": "metadata",
+				"type": "tuple"
+			}
+		],
+		"name": "SignalReceived",
+		"type": "event"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -416,19 +416,8 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "int64",
-				"name": "serialNumber",
-				"type": "int64"
-			}
-		],
-		"name": "readNFTMetadata",
+		"inputs": [],
+		"name": "readTradeSignalPublic",
 		"outputs": [
 			{
 				"components": [
@@ -448,7 +437,7 @@
 						"type": "uint64"
 					}
 				],
-				"internalType": "struct NFTMetadata",
+				"internalType": "struct TradeSignal",
 				"name": "",
 				"type": "tuple"
 			}
@@ -547,7 +536,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "swapTokens",
+		"name": "swapTokensPublic",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
