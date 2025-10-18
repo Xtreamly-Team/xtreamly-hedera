@@ -11,7 +11,7 @@ import "https://raw.githubusercontent.com/hashgraph/hedera-smart-contracts/refs/
 // import "hedera-token-service/KeyHelper.sol";
 import "https://raw.githubusercontent.com/hashgraph/hedera-smart-contracts/refs/heads/main/contracts/system-contracts/hedera-token-service/KeyHelper.sol";
 
-struct NFTMetadata {
+struct TradeSignal {
     uint8 symbolCode;   // first uint8
     uint8 actionCode;   // second uint8
     uint64 timestamp;   // epoch ms
@@ -43,7 +43,7 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
 
     event ResponseCode(int responseCode);
     event NonFungibleTokenInfo(IHederaTokenService.NonFungibleTokenInfo tokenInfo);
-    event ActionData(NFTMetadata metadata);
+    event SignalReceived(TradeSignal metadata);
 
     address public immutable swapRouter; // e.g. 0x00000000000000000000000000000000003c437A (SaucerSwap mainnet router)
     address public immutable wethAddress;
@@ -59,9 +59,9 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
         signalNFTSerialNumber = _signalNFTSerialNumber;
     }
 
-    function readNFTMetadata(address token, int64 serialNumber)
-        public
-        returns (NFTMetadata memory)
+    function readTradeSignal()
+        internal
+        returns (TradeSignal memory)
     {
         int responseCode;
         IHederaTokenService.NonFungibleTokenInfo memory info;
@@ -69,7 +69,7 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
         emit ResponseCode(responseCode);
 
         // Call HTS precompile
-        (responseCode, info) = HederaTokenService.getNonFungibleTokenInfo(token, serialNumber);
+        (responseCode, info) = HederaTokenService.getNonFungibleTokenInfo(signalNFTAddress, signalNFTSerialNumber);
         require(responseCode == HederaResponseCodes.SUCCESS, "HTS call failed");
 
         emit NonFungibleTokenInfo(info);
@@ -79,11 +79,18 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
             abi.decode(info.metadata, (uint8, uint8, uint64));
 
         // Populate struct
-        NFTMetadata memory md = NFTMetadata(symbolCode, actionCode, timestamp);
+        TradeSignal memory md = TradeSignal(symbolCode, actionCode, timestamp);
 
-        emit ActionData(md);
+        emit SignalReceived(md);
         
         return md;
+    }
+
+    function readTradeSignalPublic()
+        public
+        returns (TradeSignal memory)
+    {
+        return readTradeSignal();
     }
 
     function associateTokenPublic(address token) public returns (int responseCode) {
@@ -117,7 +124,7 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
         address tokenOut,
         uint24 fee,
         uint256 amountIn
-    ) public {
+    ) internal {
 
         // require(amountIn <= uint64(type(int64).max), "Amount exceeds int64 max");
         // int64 amountInt64 = int64(uint64(amountIn));
@@ -177,15 +184,24 @@ contract XtreamlyContract is HederaTokenService, ExpiryHelper, KeyHelper {
         require(success, "Router multicall failed");
     }
 
+    function swapTokensPublic (
+        address tokenIn,
+        address tokenOut,
+        uint24 fee,
+        uint256 amountIn
+    ) public {
+        swapTokens(tokenIn, tokenOut, fee, amountIn);
+    }
+
     function autoTrade(
         uint256 usdcAmount, 
         uint256 wethAmount
     ) external {
-        NFTMetadata memory actionData = this.readNFTMetadata(signalNFTAddress, signalNFTSerialNumber);
-        if (actionData.actionCode == 1) {
-            this.swapTokens(usdcAddress, wethAddress, 1500, usdcAmount);
-        } else if (actionData.actionCode == 2) {
-            this.swapTokens(wethAddress, usdcAddress, 1500, wethAmount);
+        TradeSignal memory tradeSignal = readTradeSignal();
+        if (tradeSignal.actionCode == 1) {
+            swapTokens(usdcAddress, wethAddress, 1500, usdcAmount);
+        } else if (tradeSignal.actionCode == 2) {
+            swapTokens(wethAddress, usdcAddress, 1500, wethAmount);
         }
     }
 
