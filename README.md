@@ -1,6 +1,6 @@
 # Xtreamly Hedera Service
 
-### Architecture
+## Project Architecture
 
 The system composes of two entities both deployed on Hedera ecosystem:
 - Signal NFT
@@ -26,6 +26,8 @@ The reason for developing the trader contract was to be used as a template for o
 add the part to read from signal NFT. We made the trader contract fully functional so that other developers have easier time intergrating Xtreamly having a funtioning example.
 
 This doesn't mean the trader contract is production ready by any means. It hasn't passed any security checks and thus it should only be used for educational purposes
+
+The hedera module and test modules were also used in creation of smart contract and NFT themselves but since they are already deployed are not much of use
 
 ## Repository structure
 
@@ -116,7 +118,7 @@ curl -X POST http://localhost:3000/trade \
 curl -X POST http://localhost:3000/signal-manual \
   -H 'Content-Type: application/json' \
   -H 'x-api-key: <XTREAMLY_USER_MANAGEMENT_API_KEY>' \
-  -d '{"token":"ETH","action":"LONG","timestamp": 1715616000000}'
+  -d '{"token":"ETH","action":"LONG","timestamp": 1715616000}'
 ```
 
 
