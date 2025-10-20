@@ -112,7 +112,7 @@ During development you can run `npm run dev` to keep TypeScript compiling in wat
 | `SIGNAL_NFT_SERIAL_NUMBER` | Yes | Serial number for the signal NFT within the collection. |
 
 
-## API Reference
+### REST API Reference
 
 All endpoints accept and return JSON. When running in production mode you must pass the `x-api-key` header with the value of `XTREAMLY_USER_MANAGEMENT_API_KEY`.
 
@@ -141,7 +141,7 @@ curl -X POST http://localhost:3000/signal-manual \
 ```
 
 
-## Docker
+### Docker
 Build and run the containerized service:
 
 ```bash
@@ -150,7 +150,7 @@ docker run --env-file .env -p 3000:3000 xtreamly-hedera
 ```
 
 
-## File Structure
+### File Structure
 - `src/server.ts` – Express API and request lifecycle instrumentation.
 - `src/contract_app.ts` – Helpers to deploy, initialize, and interact with the Hedera auto-trade contract.
 - `src/nft_signal_app.ts` – Logic for fetching Xtreamly signals and updating the signal NFT.
@@ -160,7 +160,7 @@ docker run --env-file .env -p 3000:3000 xtreamly-hedera
 - `Dockerfile` – Container build instructions.
 
 
-## Troubleshooting
+### Troubleshooting
 - Verify all required environment variables are populated before starting the service.
 - The Hedera SDK requires network connectivity to the appropriate environment (mainnet or testnet); ensure firewall rules allow outbound access.
 - If `npm start` throws `Cannot find module` errors, confirm `npm run build` succeeded and the `dist` directory was generated.
