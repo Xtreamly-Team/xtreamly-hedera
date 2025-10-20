@@ -29,6 +29,21 @@ This doesn't mean the trader contract is production ready by any means. It hasn'
 
 The hedera module and test modules were also used in creation of smart contract and NFT themselves but since they are already deployed are not much of use
 
+IMPORTANT CONTRACTS:
+- XTREAMLY ACCOUNT ID = 0.0.10034602 (Used for contract deployment and NFT)
+- XTREAMLY TRADER CONTRACT ID = 0.0.10040530
+- XTREAMLY SIGNAL NFT COLLECTION TOKEN ID = 0.0.10035099
+- XTREAMLY SIGNAL NFT SERIAL NUMBER = 1
+- SAUCERSWAP ROUTER ID = 0.0.3949434
+- WETH TOKEN ID = 0.0.9770617
+- USDC TOKEN ID = 0.0.456858
+
+Any mainnet Hedera wallet can use the trader smart contract by:
+- Approving both WETH and USDC tokens
+- Calling autoTrade and passing the amounts of each tokens to trade. Based on the direction one of tokens with the amout specified would be swapped for the other at the market rate. If the signal is none, no swap happens
+
+A fully functional system can extend the trader contract to add security measures and extend the trading logic to include stop loss, twap, etc.
+
 ## Repository structure
 
 Repository consists of three parts:
@@ -47,13 +62,13 @@ The backend service exposes a small Express API used to:
 The codebase is written in TypeScript, compiled to Node.js, and relies on the official Hedera SDK.
 
 
-## Requirements
+### Requirements
 - Node.js 18+
 - npm 9+
 - Access to Hedera Mainnet credentials and the Xtreamly API
 
 
-## Getting Started
+### Getting Started
 1. Install dependencies:
    ```bash
    npm install
@@ -73,8 +88,12 @@ The codebase is written in TypeScript, compiled to Node.js, and relies on the of
 
 During development you can run `npm run dev` to keep TypeScript compiling in watch mode, and in a second terminal run `npm start` so that the server reloads compiled output.
 
+** By supplying your HEDERA_ACCOUNT_ID and HEDERA_PRIVATE_KEY, you can deploy do both of these:
+- Call autoTrade on the deployed contract or use the REST apis to do so (/setup followed by /trade)
+- Read signal NFT data using the hedera SDK (Only Xtreamly account can update the signal stored in the NFT)
+- Deploy a new version of the contract. For this you need to also provide the SMARTCONTRACT_BYTECODE by compiling the contract using Remix or any EVM solidity compiler
 
-## Environment Variables
+### Environment Variables
 
 | Variable | Required | Description |
 | --- | --- | --- |
@@ -131,7 +150,7 @@ docker run --env-file .env -p 3000:3000 xtreamly-hedera
 ```
 
 
-## Project Structure
+## File Structure
 - `src/server.ts` – Express API and request lifecycle instrumentation.
 - `src/contract_app.ts` – Helpers to deploy, initialize, and interact with the Hedera auto-trade contract.
 - `src/nft_signal_app.ts` – Logic for fetching Xtreamly signals and updating the signal NFT.
