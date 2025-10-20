@@ -10,22 +10,16 @@ import {
     ContractExecuteTransaction,
     ContractFunctionParameters,
     ContractId,
-    EvmAddress,
     TokenCreateTransaction,
     TokenType,
     AccountAllowanceApproveTransaction,
     TransferTransaction,
-    Hbar,
-    AccountInfoQuery,
-    AccountCreateTransaction,
-    AccountUpdateTransaction,
     TokenAssociateTransaction
 
 } from "@hashgraph/sdk"; // v2.64.5
 
 import { ethers } from "ethers";
 
-import erc20Abi from "./abi/erc20.json" assert { type: "json" };;
 import saucerRouterAbi from "./abi/saucer_router_abi.json" assert { type: "json" };;
 
 // WARN: account_id.toEvmAddress just returns the account number in evm format (aka returns Hex of the account id decimal number). The associated EVM address is different. It is the equivalent evm public address derived from the private key
@@ -237,7 +231,7 @@ export class HederaOperator {
         console.log("Transaction ID             :", txContractExecuteId);
         console.log("Hashscan URL               :", "https://hashscan.io/testnet/tx/" + txContractExecuteId);
 
-        return txContractExecuteResponse
+        return txContractExecuteId
     }
 
     async getTokenInfo(tokenId: string) {
@@ -528,7 +522,7 @@ export class HederaOperator {
         console.log("Receipt status           :", statusUpdateNftsResponseTx.toString());
         console.log("Transaction ID           :", txUpdateNftsId);
         console.log("Hashscan URL             :", "https://hashscan.io/testnet/tx/" + txUpdateNftsId);
-        return receiptUpdateNftsResponseTx
+        return txUpdateNftsId
     }
 
 

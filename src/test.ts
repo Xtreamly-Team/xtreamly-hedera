@@ -114,7 +114,7 @@ async function prepareSmartContract() {
 }
 
 
-prepareSmartContract()
+// prepareSmartContract()
 
 
 async function test() {
