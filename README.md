@@ -11,7 +11,7 @@ The NFT is used for storing a single signal (using its metadata). The signal con
 - Action (e.g. LONG)
 - Timestamp
 
-Creation and updating of NFT is done usign Hedera SDK. NFT is deployed once (single collection that has single minted with serial number of 1) but its metadata is 
+Creation and updating of NFT is done usign Hedera SDK by leveraging Hedera Token Service (HTS). NFT is deployed once (single collection that has single minted with serial number of 1) but its metadata is 
 updated on regular basis (or at any desired time) offchain using the nft signal app class.
 
 The signal NFT is then read by the Trader contract to decide which direction to trade in. When ACTION is NONE no trade happens, when LONG, it would buy the token using USDC and vice versa. 
@@ -43,6 +43,11 @@ Any mainnet Hedera wallet can use the trader smart contract by:
 - Calling autoTrade and passing the amounts of each tokens to trade. Based on the direction one of tokens with the amout specified would be swapped for the other at the market rate. If the signal is none, no swap happens
 
 A fully functional system can extend the trader contract to add security measures and extend the trading logic to include stop loss, twap, etc.
+
+For developing this project we've leveraged these parts of Hedera ecosystem:
+- Hedera Token Service (HTS) for creating and updating signals NFT
+- Hedera EVM smart contract for developing the auto trader smart contract and interaction with other DeFi smart contracts (aka Composibility)
+- Saucerswap as the leading DeX on Hedera to execute trades (aka swap tokens)
 
 ## Repository structure
 
